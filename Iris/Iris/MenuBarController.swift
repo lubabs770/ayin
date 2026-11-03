@@ -3,39 +3,12 @@ import AVFoundation
 import ServiceManagement
 import Sparkle
 
-// MARK: - Menu Bar Icon Styles
-enum MenuBarIconStyle: Int, CaseIterable {
-    case sfSymbolEye = 0      // Option A: SF Symbol eye.circle
-    case neuralWeb = 1        // Option B: Neural web pattern
-    case concentricRings = 2  // Option C: Concentric rings
-    case almondEye = 3        // Option D: Stylized almond eye
-    case eyeOfHorus = 4       // Option E: Eye of Horus
-
-    var displayName: String {
-        switch self {
-        case .sfSymbolEye: return "Eye Circle (SF Symbol)"
-        case .neuralWeb: return "Neural Web"
-        case .concentricRings: return "Concentric Rings"
-        case .almondEye: return "Almond Eye"
-        case .eyeOfHorus: return "Eye of Horus"
-        }
-    }
-
-    var next: MenuBarIconStyle {
-        let allCases = MenuBarIconStyle.allCases
-        let currentIndex = allCases.firstIndex(of: self) ?? 0
-        let nextIndex = (currentIndex + 1) % allCases.count
-        return allCases[nextIndex]
-    }
-}
-
 class MenuBarController: NSObject {
 
     // MARK: - Properties
     private var statusItem: NSStatusItem?
     private weak var circularWindow: CircularWindow?
     private var cameraManager: CameraManager
-    private var currentIconStyle: MenuBarIconStyle = .almondEye
     private var hotkeyRecorderPanel: NSPanel?
     var updaterController: SPUStandardUpdaterController?
 
@@ -82,7 +55,6 @@ class MenuBarController: NSObject {
         }
         debugLog("button obtained")
 
-        // Set icon based on current style
         updateMenuBarIcon()
 
         // Set tooltip
@@ -106,183 +78,11 @@ class MenuBarController: NSObject {
     private func updateMenuBarIcon() {
         guard let button = statusItem?.button else { return }
 
-        let image = createMenuBarIcon(style: currentIconStyle)
+        let image = createConcentricRingsIcon()
         image.isTemplate = true
         button.image = image
     }
 
-    private func createMenuBarIcon(style: MenuBarIconStyle) -> NSImage {
-        switch style {
-        case .sfSymbolEye:
-            return createSFSymbolEyeIcon()
-        case .neuralWeb:
-            return createNeuralWebIcon()
-        case .concentricRings:
-            return createConcentricRingsIcon()
-        case .almondEye:
-            return createAlmondEyeIcon()
-        case .eyeOfHorus:
-            return createEyeOfHorusIcon()
-        }
-    }
-
-    // Option A: SF Symbol eye.circle
-    private func createSFSymbolEyeIcon() -> NSImage {
-        if let image = NSImage(systemSymbolName: "eye.circle", accessibilityDescription: "Iris") {
-            return image
-        }
-        // Fallback to custom drawn icon
-        return createNeuralWebIcon()
-    }
-
-    // Option B: Neural web pattern (no outer circle, randomized branches)
-    private func createNeuralWebIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            let center = NSPoint(x: rect.midX, y: rect.midY)
-            let maxRadius: CGFloat = 8.0
-            let pupilRadius: CGFloat = 3.5  // Bigger pupil
-
-            NSColor.black.setStroke()
-            NSColor.black.setFill()
-
-            // Seeded pseudo-random values for consistent but organic look
-            // These create a deterministic "random" pattern
-            let branchData: [(angle: CGFloat, length: CGFloat, curve: CGFloat, hasSecondary: Bool)] = [
-                (0.0, 0.95, 0.2, true),
-                (0.9, 0.75, -0.15, false),
-                (1.7, 0.85, 0.25, true),
-                (2.4, 0.65, -0.1, true),
-                (3.3, 0.90, 0.18, false),
-                (4.0, 0.70, -0.22, true),
-                (4.9, 0.80, 0.12, false),
-                (5.6, 0.88, -0.2, true),
-            ]
-
-            let nodeRadius: CGFloat = 0.9
-
-            for branch in branchData {
-                let baseAngle = branch.angle
-                let lengthFactor = branch.length
-                let curveOffset = branch.curve
-
-                // Main branch from pupil outward
-                let startPoint = NSPoint(
-                    x: center.x + cos(baseAngle) * (pupilRadius + 0.3),
-                    y: center.y + sin(baseAngle) * (pupilRadius + 0.3)
-                )
-
-                // End point with varied length
-                let endRadius = maxRadius * lengthFactor
-                let endPoint = NSPoint(
-                    x: center.x + cos(baseAngle) * endRadius,
-                    y: center.y + sin(baseAngle) * endRadius
-                )
-
-                // Control point for organic curve
-                let midRadius = (pupilRadius + endRadius) / 2
-                let controlAngle = baseAngle + curveOffset
-                let controlPoint = NSPoint(
-                    x: center.x + cos(controlAngle) * midRadius,
-                    y: center.y + sin(controlAngle) * midRadius
-                )
-
-                // Draw curved branch
-                let branchPath = NSBezierPath()
-                branchPath.move(to: startPoint)
-                branchPath.curve(to: endPoint, controlPoint1: controlPoint, controlPoint2: controlPoint)
-                branchPath.lineWidth = 0.7
-                branchPath.stroke()
-
-                // Draw node at end of branch
-                let nodeCircle = NSBezierPath(
-                    ovalIn: NSRect(
-                        x: endPoint.x - nodeRadius,
-                        y: endPoint.y - nodeRadius,
-                        width: nodeRadius * 2,
-                        height: nodeRadius * 2
-                    )
-                )
-                nodeCircle.fill()
-
-                // Draw secondary branch for some
-                if branch.hasSecondary {
-                    let secondaryAngle = baseAngle + (curveOffset > 0 ? 0.5 : -0.5)
-                    let secondaryStart = NSPoint(
-                        x: center.x + cos(baseAngle) * (midRadius * 0.8),
-                        y: center.y + sin(baseAngle) * (midRadius * 0.8)
-                    )
-                    let secondaryEnd = NSPoint(
-                        x: center.x + cos(secondaryAngle) * (endRadius * 0.85),
-                        y: center.y + sin(secondaryAngle) * (endRadius * 0.85)
-                    )
-
-                    let secondaryBranch = NSBezierPath()
-                    secondaryBranch.move(to: secondaryStart)
-                    secondaryBranch.line(to: secondaryEnd)
-                    secondaryBranch.lineWidth = 0.5
-                    secondaryBranch.stroke()
-
-                    // Small node at secondary branch end
-                    let smallNodeRadius: CGFloat = 0.6
-                    let smallNode = NSBezierPath(
-                        ovalIn: NSRect(
-                            x: secondaryEnd.x - smallNodeRadius,
-                            y: secondaryEnd.y - smallNodeRadius,
-                            width: smallNodeRadius * 2,
-                            height: smallNodeRadius * 2
-                        )
-                    )
-                    smallNode.fill()
-                }
-            }
-
-            // Draw pupil (filled circle) on top
-            let pupilCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: center.x - pupilRadius,
-                    y: center.y - pupilRadius,
-                    width: pupilRadius * 2,
-                    height: pupilRadius * 2
-                )
-            )
-            pupilCircle.fill()
-
-            // Draw light reflection highlights (two for realistic eye look)
-            NSColor.white.setFill()
-
-            // Main highlight (upper right)
-            let highlightRadius: CGFloat = 1.2
-            let highlightCenter = NSPoint(x: center.x + 1.0, y: center.y + 1.0)
-            let highlightCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: highlightCenter.x - highlightRadius,
-                    y: highlightCenter.y - highlightRadius,
-                    width: highlightRadius * 2,
-                    height: highlightRadius * 2
-                )
-            )
-            highlightCircle.fill()
-
-            // Secondary smaller highlight (lower left)
-            let smallHighlightRadius: CGFloat = 0.6
-            let smallHighlightCenter = NSPoint(x: center.x - 1.2, y: center.y - 0.8)
-            let smallHighlightCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: smallHighlightCenter.x - smallHighlightRadius,
-                    y: smallHighlightCenter.y - smallHighlightRadius,
-                    width: smallHighlightRadius * 2,
-                    height: smallHighlightRadius * 2
-                )
-            )
-            smallHighlightCircle.fill()
-
-            return true
-        }
-        return image
-    }
-
-    // Option C: Concentric rings
     private func createConcentricRingsIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { rect in
@@ -332,188 +132,6 @@ class MenuBarController: NSObject {
             return true
         }
         return image
-    }
-
-    // Option D: Stylized almond-shaped eye
-    private func createAlmondEyeIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            let center = NSPoint(x: rect.midX, y: rect.midY)
-            let eyeWidth: CGFloat = 16.0
-            let eyeHeight: CGFloat = 8.0
-            let irisRadius: CGFloat = 3.0
-            let pupilRadius: CGFloat = 1.5
-
-            NSColor.black.setStroke()
-            NSColor.black.setFill()
-
-            // Draw almond shape using bezier curves
-            let almondPath = NSBezierPath()
-
-            // Left point
-            let leftPoint = NSPoint(x: center.x - eyeWidth / 2, y: center.y)
-            // Right point
-            let rightPoint = NSPoint(x: center.x + eyeWidth / 2, y: center.y)
-
-            // Control points for top curve
-            let topControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y + eyeHeight / 2)
-            let topControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y + eyeHeight / 2)
-
-            // Control points for bottom curve
-            let bottomControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y - eyeHeight / 2)
-            let bottomControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y - eyeHeight / 2)
-
-            // Draw top half of almond
-            almondPath.move(to: leftPoint)
-            almondPath.curve(to: rightPoint, controlPoint1: topControlLeft, controlPoint2: topControlRight)
-
-            // Draw bottom half of almond
-            almondPath.curve(to: leftPoint, controlPoint1: bottomControlRight, controlPoint2: bottomControlLeft)
-
-            almondPath.lineWidth = 1.2
-            almondPath.stroke()
-
-            // Draw iris circle
-            let irisCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: center.x - irisRadius,
-                    y: center.y - irisRadius,
-                    width: irisRadius * 2,
-                    height: irisRadius * 2
-                )
-            )
-            irisCircle.lineWidth = 1.0
-            irisCircle.stroke()
-
-            // Draw pupil (filled)
-            let pupilCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: center.x - pupilRadius,
-                    y: center.y - pupilRadius,
-                    width: pupilRadius * 2,
-                    height: pupilRadius * 2
-                )
-            )
-            pupilCircle.fill()
-
-            return true
-        }
-        return image
-    }
-
-    // Option E: Eye of Horus (ancient Egyptian symbol)
-    private func createEyeOfHorusIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            let center = NSPoint(x: rect.midX, y: rect.midY)
-            let eyeWidth: CGFloat = 12.0
-            let eyeHeight: CGFloat = 6.5
-            let irisRadius: CGFloat = 2.5
-
-            NSColor.black.setStroke()
-            NSColor.black.setFill()
-
-            // Draw almond-shaped eye outline (thick lines)
-            let eyePath = NSBezierPath()
-
-            // Inner corner (left) and outer corner (right)
-            let innerCorner = NSPoint(x: center.x - eyeWidth / 2, y: center.y)
-            let outerCorner = NSPoint(x: center.x + eyeWidth / 2, y: center.y)
-
-            // Control points for top curve
-            let topControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y + eyeHeight / 2)
-            let topControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y + eyeHeight / 2)
-
-            // Control points for bottom curve
-            let bottomControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y - eyeHeight / 2)
-            let bottomControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y - eyeHeight / 2)
-
-            // Draw top eyelid
-            eyePath.move(to: innerCorner)
-            eyePath.curve(to: outerCorner, controlPoint1: topControlLeft, controlPoint2: topControlRight)
-
-            // Draw bottom eyelid
-            eyePath.curve(to: innerCorner, controlPoint1: bottomControlRight, controlPoint2: bottomControlLeft)
-
-            eyePath.lineWidth = 1.5
-            eyePath.stroke()
-
-            // Draw curved eyebrow above - starts from inner corner, arches up prominently
-            let eyebrowPath = NSBezierPath()
-            let eyebrowStart = NSPoint(x: innerCorner.x, y: innerCorner.y + eyeHeight / 2)
-            let eyebrowEnd = NSPoint(x: outerCorner.x - 1.0, y: outerCorner.y + eyeHeight / 2 + 0.5)
-            let eyebrowControl = NSPoint(x: center.x, y: center.y + eyeHeight / 2 + 3.0)
-            eyebrowPath.move(to: eyebrowStart)
-            eyebrowPath.curve(to: eyebrowEnd, controlPoint1: eyebrowControl, controlPoint2: eyebrowControl)
-            eyebrowPath.lineWidth = 1.5
-            eyebrowPath.stroke()
-
-            // Draw teardrop marking below inner corner (left side)
-            // Vertical line descending from inner corner
-            let teardropPath = NSBezierPath()
-            let teardropTop = NSPoint(x: innerCorner.x, y: innerCorner.y - eyeHeight / 2)
-            let teardropBottom = NSPoint(x: innerCorner.x, y: innerCorner.y - eyeHeight / 2 - 2.5)
-            teardropPath.move(to: teardropTop)
-            teardropPath.line(to: teardropBottom)
-            teardropPath.lineWidth = 1.5
-            teardropPath.stroke()
-
-            // Small circle attached at bottom, slightly offset to the right
-            let teardropCircleRadius: CGFloat = 1.0
-            let teardropCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: teardropBottom.x + 0.5 - teardropCircleRadius,
-                    y: teardropBottom.y - teardropCircleRadius,
-                    width: teardropCircleRadius * 2,
-                    height: teardropCircleRadius * 2
-                )
-            )
-            teardropCircle.fill()
-
-            // Draw spiral marking below outer corner (right side)
-            // Extends down and curls inward to form tight spiral
-            let spiralPath = NSBezierPath()
-            let spiralStart = NSPoint(x: outerCorner.x, y: outerCorner.y - eyeHeight / 2)
-            let spiralMid = NSPoint(x: outerCorner.x + 0.5, y: outerCorner.y - eyeHeight / 2 - 1.5)
-            let spiralEnd = NSPoint(x: outerCorner.x - 0.5, y: outerCorner.y - eyeHeight / 2 - 2.5)
-
-            // Draw the spiral: down, then curl inward
-            spiralPath.move(to: spiralStart)
-            spiralPath.line(to: spiralMid)
-
-            // Create tight spiral/volute by drawing curved path that curls inward
-            let spiralControl1 = NSPoint(x: outerCorner.x + 1.0, y: outerCorner.y - eyeHeight / 2 - 2.0)
-            let spiralControl2 = NSPoint(x: outerCorner.x, y: outerCorner.y - eyeHeight / 2 - 2.5)
-            spiralPath.curve(to: spiralEnd, controlPoint1: spiralControl1, controlPoint2: spiralControl2)
-
-            // Continue the spiral inward
-            let spiralInner = NSPoint(x: outerCorner.x - 1.2, y: outerCorner.y - eyeHeight / 2 - 2.0)
-            let spiralInnerControl = NSPoint(x: outerCorner.x - 0.8, y: outerCorner.y - eyeHeight / 2 - 2.3)
-            spiralPath.curve(to: spiralInner, controlPoint1: spiralInnerControl, controlPoint2: spiralInnerControl)
-
-            spiralPath.lineWidth = 1.5
-            spiralPath.stroke()
-
-            // Draw filled iris circle (no separate pupil - just filled black circle)
-            let irisCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: center.x - irisRadius,
-                    y: center.y - irisRadius,
-                    width: irisRadius * 2,
-                    height: irisRadius * 2
-                )
-            )
-            irisCircle.fill()
-
-            return true
-        }
-        return image
-    }
-
-    @objc func cycleIconStyle() {
-        currentIconStyle = currentIconStyle.next
-        updateMenuBarIcon()
-        debugLog("Icon style changed to: \(currentIconStyle.displayName)")
     }
 
     // MARK: - Menu Creation
@@ -568,12 +186,6 @@ class MenuBarController: NSObject {
         launchItem.target = self
         launchItem.state = isLaunchAtLoginEnabled() ? .on : .off
         menu.addItem(launchItem)
-
-        // Icon Style submenu (for testing different icon designs)
-        let iconMenuItem = NSMenuItem(title: "Icon Style", action: nil, keyEquivalent: "")
-        let iconSubmenu = createIconStyleSubmenu()
-        iconMenuItem.submenu = iconSubmenu
-        menu.addItem(iconMenuItem)
 
         let hotkeyMenuItem = NSMenuItem(title: "Toggle Hotkey", action: nil, keyEquivalent: "")
         let hotkeySubmenu = createHotkeySubmenu()
@@ -630,29 +242,6 @@ class MenuBarController: NSObject {
 
             // Checkmark for current camera
             if camera.uniqueID == currentDevice?.uniqueID {
-                item.state = .on
-            }
-
-            menu.addItem(item)
-        }
-
-        return menu
-    }
-
-    private func createIconStyleSubmenu() -> NSMenu {
-        let menu = NSMenu()
-
-        for style in MenuBarIconStyle.allCases {
-            let item = NSMenuItem(
-                title: style.displayName,
-                action: #selector(selectIconStyle(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.tag = style.rawValue
-
-            // Checkmark for current style
-            if style == currentIconStyle {
                 item.state = .on
             }
 
@@ -746,13 +335,6 @@ class MenuBarController: NSObject {
 
         // Update the window
         circularWindow?.setMirrored(newValue)
-    }
-
-    @objc func selectIconStyle(_ sender: NSMenuItem) {
-        guard let style = MenuBarIconStyle(rawValue: sender.tag) else { return }
-        currentIconStyle = style
-        updateMenuBarIcon()
-        debugLog("Icon style changed to: \(style.displayName)")
     }
 
     @objc func toggleHotkeyEnabled() {

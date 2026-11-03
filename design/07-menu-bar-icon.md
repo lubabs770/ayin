@@ -165,38 +165,7 @@ Visual:
 
 ---
 
-## Implementation
-
-All options will be implemented in `MenuBarController.swift` with a selection mechanism to switch between them for comparison.
-
-### Icon Drawing Helper
-
-```swift
-enum MenuBarIconStyle: Int {
-    case sfSymbolEye = 0      // Option A: SF Symbol
-    case neuralWeb = 1        // Option B: Neural Web
-    case concentricRings = 2  // Option C: Concentric Rings
-    case almondEye = 3        // Option D: Almond Eye (default)
-    case eyeOfHorus = 4       // Option E: Eye of Horus
-}
-
-func createMenuBarIcon(style: MenuBarIconStyle, size: CGSize) -> NSImage
-```
-
-### Testing
-
-A preference or menu item will allow cycling through all options to compare them in the actual menu bar context.
-
-## Recommendation
-
-**Option D (Almond Eye)** is the current default because:
-1. Clearly recognizable as an eye
-2. Classic, universally understood eye shape
-3. Simple and clean at small sizes
-4. Distinctive almond silhouette
-
-**Option B (Neural Web)** is an alternative for a more tech/neural aesthetic.
-
 ## Decision
 
-**Almond Eye** selected as default. Neural Web available as alternative option in menu.
+**Concentric Rings (Option C)** is the only menu bar icon. The other options and the
+"Icon Style" picker were removed; `MenuBarController.createConcentricRingsIcon()` draws it.

@@ -37,3 +37,12 @@ jobs:
             exit 1
           }
           echo "Sparkle.framework embedded OK"
+
+      - name: Zip app
+        run: ditto -c -k --keepParent Iris/build/Build/Products/Release/Iris.app Iris.zip
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Iris
+          path: Iris.zip
