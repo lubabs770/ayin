@@ -5,5 +5,18 @@
     <link>https://raw.githubusercontent.com/lubabs770/ayin/main/appcast.xml</link>
     <description>Updates for Iris</description>
     <language>en</language>
+    <item>
+      <title>Version 0.4.0</title>
+      <link>https://github.com/lubabs770/ayin/releases/tag/v0.4.0</link>
+      <sparkle:fullReleaseNotesLink>https://github.com/lubabs770/ayin/releases/tag/v0.4.0</sparkle:fullReleaseNotesLink>
+      <sparkle:version>0.4.0</sparkle:version>
+      <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <pubDate>Tue, 03 Nov 2026 20:02:03 +0000</pubDate>
+      <enclosure
+        url="https://github.com/lubabs770/ayin/releases/download/v0.4.0/Iris-v0.4.0.zip"
+        sparkle:edSignature="OblUdPvKIAJt30gbEQA51rz34ST5ygpKDn7NnKP0VOp5Es7LzBxqhVumQlbTuStFgSeiHQvAX1VY+7AqbT9oCg==" length="1285134"
+        type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
