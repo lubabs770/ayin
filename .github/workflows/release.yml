@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-release:
     name: Build and Release
-    runs-on: macos-latest
+    runs-on: macos-15-intel
 
     permissions:
       contents: write  # Required to create releases
@@ -120,19 +120,19 @@ jobs:
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
             <channel>
               <title>Iris</title>
-              <link>https://raw.githubusercontent.com/ahmetb/Iris/main/appcast.xml</link>
+              <link>https://raw.githubusercontent.com/lubabs770/ayin/main/appcast.xml</link>
               <description>Updates for Iris</description>
               <language>en</language>
               <item>
                 <title>Version ${VERSION}</title>
-                <link>https://github.com/ahmetb/Iris/releases/tag/${TAG}</link>
-                <sparkle:fullReleaseNotesLink>https://github.com/ahmetb/Iris/releases/tag/${TAG}</sparkle:fullReleaseNotesLink>
+                <link>https://github.com/lubabs770/ayin/releases/tag/${TAG}</link>
+                <sparkle:fullReleaseNotesLink>https://github.com/lubabs770/ayin/releases/tag/${TAG}</sparkle:fullReleaseNotesLink>
                 <sparkle:version>${VERSION}</sparkle:version>
                 <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
                 <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
                 <pubDate>${PUB_DATE}</pubDate>
                 <enclosure
-                  url="https://github.com/ahmetb/Iris/releases/download/${TAG}/Iris-${TAG}.zip"
+                  url="https://github.com/lubabs770/ayin/releases/download/${TAG}/Iris-${TAG}.zip"
                   ${ENCLOSURE_ATTRS}
                   type="application/octet-stream"/>
               </item>
@@ -223,8 +223,8 @@ jobs:
             Install via Homebrew using the personal tap:
 
             ```bash
-            brew tap ahmetb/iris https://github.com/ahmetb/Iris
-            brew install --cask ahmetb/iris/iris
+            brew tap lubabs770/ayin https://github.com/lubabs770/ayin
+            brew install --cask lubabs770/ayin/iris
             ```
 
             ⚠️ **macOS will show a warning about the unsigned application binary**. This is normal for open-source apps distributed outside the Mac App Store. To solve this:

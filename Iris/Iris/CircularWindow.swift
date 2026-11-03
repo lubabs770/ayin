@@ -43,6 +43,9 @@ class CircularWindow: NSWindow {
 
     private func configureWindow() {
         self.level = .floating
+        // Behave like the system PiP window: on every Space, over full-screen
+        // apps, pinned during Space switches, and skipped by Cmd-` / Mission Control.
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = true

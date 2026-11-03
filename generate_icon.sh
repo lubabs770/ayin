@@ -40,159 +40,32 @@ let iconSizes: [(size: CGFloat, scale: Int, filename: String, jsonSize: String)]
     (1024, 2, "icon_512x512@2x.png", "512x512"),
 ]
 
-// Generate app icon (inline version of AppIconGenerator)
+// Generate app icon: concentric rings on a light disc (matches the menu bar icon)
 func generateAppIcon(size: CGSize) -> NSImage {
     let image = NSImage(size: size, flipped: false) { rect in
+        let d = min(size.width, size.height)
         let center = NSPoint(x: rect.midX, y: rect.midY)
-        let minDimension = min(size.width, size.height)
 
-        let isLargeIcon = minDimension >= 256
-        let isMediumIcon = minDimension >= 64 && minDimension < 256
-        let isSmallIcon = minDimension < 64
-
-        let eyeWidth = minDimension * 0.75
-        let eyeHeight = minDimension * 0.4
-        let irisRadius = minDimension * 0.15
-        let pupilRadius = minDimension * 0.075
-
-        if isLargeIcon {
-            let bgRadius = minDimension * 0.48
-            let bgCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: center.x - bgRadius,
-                    y: center.y - bgRadius,
-                    width: bgRadius * 2,
-                    height: bgRadius * 2
-                )
-            )
-            let gradient = NSGradient(colors: [
-                NSColor(white: 0.95, alpha: 1.0),
-                NSColor(white: 0.90, alpha: 1.0)
-            ])
-            gradient?.draw(in: bgCircle, angle: -90)
+        func circle(_ r: CGFloat) -> NSBezierPath {
+            NSBezierPath(ovalIn: NSRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2))
         }
 
-        let almondPath = NSBezierPath()
-        let leftPoint = NSPoint(x: center.x - eyeWidth / 2, y: center.y)
-        let rightPoint = NSPoint(x: center.x + eyeWidth / 2, y: center.y)
-        let topControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y + eyeHeight / 2)
-        let topControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y + eyeHeight / 2)
-        let bottomControlLeft = NSPoint(x: center.x - eyeWidth / 4, y: center.y - eyeHeight / 2)
-        let bottomControlRight = NSPoint(x: center.x + eyeWidth / 4, y: center.y - eyeHeight / 2)
-
-        almondPath.move(to: leftPoint)
-        almondPath.curve(to: rightPoint, controlPoint1: topControlLeft, controlPoint2: topControlRight)
-        almondPath.curve(to: leftPoint, controlPoint1: bottomControlRight, controlPoint2: bottomControlLeft)
-        almondPath.close()
-
-        let strokeWidth = isSmallIcon ? 1.0 : (isMediumIcon ? 2.0 : 3.0)
-        almondPath.lineWidth = strokeWidth
-
-        if isLargeIcon {
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
-            shadow.shadowOffset = NSSize(width: 0, height: -2)
-            shadow.shadowBlurRadius = 4
-            shadow.set()
-        }
+        let bg = circle(d * 0.48)
+        NSGradient(colors: [NSColor(white: 0.97, alpha: 1), NSColor(white: 0.88, alpha: 1)])?
+            .draw(in: bg, angle: -90)
 
         NSColor.black.setStroke()
-        almondPath.stroke()
-
-        if isLargeIcon {
-            NSShadow().set()
-        }
-
-        let irisRect = NSRect(
-            x: center.x - irisRadius,
-            y: center.y - irisRadius,
-            width: irisRadius * 2,
-            height: irisRadius * 2
-        )
-        let irisCircle = NSBezierPath(ovalIn: irisRect)
-
-        if isLargeIcon {
-            let irisGradient = NSGradient(colors: [
-                NSColor(red: 0.2, green: 0.3, blue: 0.5, alpha: 1.0),
-                NSColor(red: 0.4, green: 0.5, blue: 0.7, alpha: 1.0)
-            ])
-            irisGradient?.draw(in: irisCircle, angle: -45)
-            NSColor.black.setStroke()
-            irisCircle.lineWidth = strokeWidth * 0.6
-            irisCircle.stroke()
-        } else if isMediumIcon {
-            NSColor(red: 0.3, green: 0.4, blue: 0.6, alpha: 1.0).setFill()
-            irisCircle.fill()
-            NSColor.black.setStroke()
-            irisCircle.lineWidth = strokeWidth * 0.7
-            irisCircle.stroke()
-        } else {
-            NSColor.black.setStroke()
-            irisCircle.lineWidth = strokeWidth * 0.8
-            irisCircle.stroke()
-        }
-
-        let pupilCircle = NSBezierPath(
-            ovalIn: NSRect(
-                x: center.x - pupilRadius,
-                y: center.y - pupilRadius,
-                width: pupilRadius * 2,
-                height: pupilRadius * 2
-            )
-        )
         NSColor.black.setFill()
-        pupilCircle.fill()
 
-        if isLargeIcon {
-            NSColor.white.setFill()
-            let highlightRadius = pupilRadius * 0.4
-            let highlightOffset = pupilRadius * 0.3
-            let highlightCenter = NSPoint(
-                x: center.x + highlightOffset,
-                y: center.y + highlightOffset
-            )
-            let highlightCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: highlightCenter.x - highlightRadius,
-                    y: highlightCenter.y - highlightRadius,
-                    width: highlightRadius * 2,
-                    height: highlightRadius * 2
-                )
-            )
-            highlightCircle.fill()
+        let outer = circle(d * 0.36)
+        outer.lineWidth = max(1, d * 0.055)
+        outer.stroke()
 
-            let smallHighlightRadius = pupilRadius * 0.2
-            let smallHighlightCenter = NSPoint(
-                x: center.x - highlightOffset * 0.5,
-                y: center.y - highlightOffset * 0.5
-            )
-            let smallHighlightCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: smallHighlightCenter.x - smallHighlightRadius,
-                    y: smallHighlightCenter.y - smallHighlightRadius,
-                    width: smallHighlightRadius * 2,
-                    height: smallHighlightRadius * 2
-                )
-            )
-            smallHighlightCircle.fill()
-        } else if isMediumIcon {
-            NSColor.white.setFill()
-            let highlightRadius = pupilRadius * 0.35
-            let highlightOffset = pupilRadius * 0.25
-            let highlightCenter = NSPoint(
-                x: center.x + highlightOffset,
-                y: center.y + highlightOffset
-            )
-            let highlightCircle = NSBezierPath(
-                ovalIn: NSRect(
-                    x: highlightCenter.x - highlightRadius,
-                    y: highlightCenter.y - highlightRadius,
-                    width: highlightRadius * 2,
-                    height: highlightRadius * 2
-                )
-            )
-            highlightCircle.fill()
-        }
+        let middle = circle(d * 0.225)
+        middle.lineWidth = max(1, d * 0.045)
+        middle.stroke()
+
+        circle(d * 0.09).fill()
 
         return true
     }

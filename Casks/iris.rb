@@ -2,10 +2,10 @@ cask "iris" do
   version "0.3.1"
   sha256 "40410df661175ced0e362b624fa487f3a9dddbc8916d9df272d4ca0d922528d8"
 
-  url "https://github.com/ahmetb/Iris/releases/download/v#{version}/Iris-v#{version}.zip"
+  url "https://github.com/lubabs770/ayin/releases/download/v#{version}/Iris-v#{version}.zip"
   name "Iris"
   desc "Floating webcam viewing window (a hand mirror)"
-  homepage "https://github.com/ahmetb/Iris"
+  homepage "https://github.com/lubabs770/ayin"
 
   livecheck do
     url :url
